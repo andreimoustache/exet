@@ -2,7 +2,7 @@
 
 ## A web app for crossword construction
 
-#### Version: Exet v1.04.2, April 11, 2026
+#### Version: Exet v1.05.1, May 22, 2026
 
 #### Author: Viresh Ratnakar
 
@@ -1362,6 +1362,44 @@ creating a new blank grid or whether you invoke it on an existing grid):
   lights is reached, when a new grid is being created. There is no target set
   if you use the "Edit > Add automagic blocks" option.
 
+### Autofill algorithm
+
+The autofill algorithm uses beam search to avoid backtracking. Here are some
+details:
+
+- Maintain a “beam” of K best candidates (my default is K = 64).
+- At each step, pull out the best candidate from the beam and generate a bunch
+  of its refinements (use randomness) by filling out one unfilled cell with
+  one letter from its available choices. Prefer filling out a cell that is more
+  constrained.
+- Score these refinements and add the ones to the beam that are better than
+  what’s already in the beam.
+  - We need a score that reflects the *viability* of a candidate (i.e., the
+    likelihood that it can be extended into a complete grid-fill).  Would also
+    like to reward the algo for making forward progress.
+  - Each light that is not fully filled in a candidate has a list of possible
+    solutions (that can be efficiently retrieved using from the indexed
+    lexicon).
+  - These retrieved lists then imply, for each unfilled cell, lists of letters
+    that can fill the cell. For checked cells, the choices are the intersection
+    of the choices implied by the lights that intersect at that cell.
+  - *viability(row, col)* maps the number of choices for that cell to the range
+    *0..5*:
+    ```
+      viability = (#choices == 0) ? 0 : min(5, log2(#choices))
+    ```
+  - Heuristic: treat *viability(row, col) &divide; 5* as the independent
+    probability of an unfilled cell being fillable.
+  - *ScoreV = ∑{unfilled cells (r,c)} log(viability(r,c))*
+  - *ScoreV* is heuristically proportional to the probability that the
+    current candidate can be fully filled. Note that if any *viability(r,c)* is
+    0 then this candidate is already not viable.
+  - Boost for making progress: *ScoreF = #filled cells*.
+  - *Score = ScoreV + 0.3 ScoreF* (settled on 0.3 after some experimentation).
+
+
+
+
 ## Copyright notices
 
 ### UKACD18
@@ -1502,11 +1540,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-The latest code and documentation for Exet can be found at:
-https://github.com/viresh-ratnakar/exet
-```
-
-# Exet
 The latest code and documentation for Exet can be found at:
 https://github.com/viresh-ratnakar/exet
 ```

@@ -1,5 +1,18 @@
 # Changelog
 
+### Exet v1.05.1, May 22, 2026
+
+- Make the long-fodder-warning icon a button, and when it's clicked, it
+  adds an exclamation mark at the end and triggers reprocessing of the
+  fodder.
+- Minor bug-fix: when clicking on a dark cell, call puz.deactivator()
+  rather than puz.deactivateCurrCell(), so that the active clue is also
+  deactivated.
+- Add a description of the autofill algorithm to README.md.
+- Remove version string from most files (to reduce future headaches
+  about updating them all). exet-version.txt and the header in exet.js
+  are enough.
+
 ### Exet v1.05, April 28, 2026
 
 - Refactoring changes, largely, mostly for autofill code, slowly working
